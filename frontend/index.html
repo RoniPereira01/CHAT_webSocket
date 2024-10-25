@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat teste</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.0/socket.io.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Chat</h1>
+    <form id="chat">
+        <input type="text" name="usuario" placeholder="Digite seu usuário">
+        <div class="mensagens"></div>
+        <input type="text" name="mensagem" placeholder="Digite sua mensagem">
+        <button type="submit" class="botao">Enviar</button>
+        <button type="button" class="botao" id="limparChat">Limpar chat</button>
+    </form>
+
+    <script type="text/javascript">
+        var socket = io('http://endereco');
+
+        function renderizaMensagem(mensagem) {
+            $('.mensagens').append('<div class="mensagem"><strong>'+ mensagem.autor +'</strong>:'+ mensagem.mensagem +'</div>');
+        }
+
+
+        socket.on('mensagensAnteriores', function(mensagens){
+            for(mensagem of mensagens){
+                renderizaMensagem(mensagem);
+            }
+        });
+
+        socket.on('mensagemRecebida', function(mensagem){
+            renderizaMensagem(mensagem);
+        });
+
+        $('#chat').submit(function(e) {
+            e.preventDefault();
+
+            var autor = $('input[name=usuario]').val();
+            var mensagem = $('input[name=mensagem]').val();
+
+            if(autor.length && mensagem.length){
+                var objetoMensagem ={
+                    autor: autor,
+                    mensagem: mensagem,
+                };
+
+                renderizaMensagem(objetoMensagem);
+
+                socket.emit('enviaMensagem', objetoMensagem);
+            };
+        })
+
+        $('#limparChat').click(function() {
+        $('.mensagens').empty(); 
+        socket.emit('limparMensagens'); 
+});
+    </script>
+</body>
+</html>
